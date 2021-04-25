@@ -1,0 +1,131 @@
+\documentclass[a4paper]{article}
+
+\usepackage{fullpage} % Package to use full page
+\usepackage{parskip} % Package to tweak paragraph skipping
+\usepackage{tikz} % Package for drawing
+\usepackage[fleqn]{amsmath}
+\usepackage{hyperref}
+\hypersetup{ 
+    colorlinks=true,
+    linkcolor=red,
+    filecolor=magenta,      
+    urlcolor=blue,
+}
+\urlstyle{same}
+
+\usepackage{float}
+\usepackage{multicol}
+\usepackage{listings}
+\lstset{language=Python}
+\lstset{frame=lines}
+\lstset{basicstyle=\footnotesize}
+
+\usepackage{changepage}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{subcaption}
+\usepackage{mathtools}
+
+\usepackage{biblatex}
+\addbibresource{bibliography.bib}
+
+\renewcommand\thesubsection{\thesection.\alph{subsection}}
+\renewcommand\thesubsubsection{\thesubsection.\roman{subsubsection}}
+
+\title{\textbf{CS 306\\ Assignment 1}}
+\author{Name IDK\\IDK's ID}
+\date{Due date: April 18, 2021}
+
+\begin{document}
+
+\maketitle
+
+\section{Constraint optimization and modeling using linear algebra techniques}
+The general equation of a circle is $(x - x_0)^2 + (y - y_0)^2 = r^2$, where $(x_0, y_0)$ is the circle centre and $r$ is the radius.
+\par General equation of a conic is $ax^2 + bxy + cy^2 + dx + ey + f = 0$. A circle is a conic with certain constraints.
+
+\subsection{Compute and state the values of $a, b, c, d, e, f$ in terms of the parameters: circle center, and the radius}
+Expanding the equation of a circle, we get:
+\begin{align*}
+             & (x - x_0)^2 + (y - y_0)^2 = r^2                         \\
+    \implies & x^2 - 2xx_0 + {x_0}^2 + y^2 - 2yy_0 + {y_0}^2 = r^2     \\
+    \implies & x^2 - 2xx_0 + {x_0}^2 + y^2 - 2yy_0 + {y_0}^2 - r^2 = 0 \\
+    \implies & x^2 + y^2 - 2x_0x - 2y_0y + {x_0}^2 + {y_0}^2 - r^2 = 0
+\end{align*}
+Comparing this with the general equation of a conic, we get:
+\begin{equation*}
+    \centering
+    ax^2 + bxy + cy^2 + dx + ey + f = 0 \equiv x^2 + y^2 - 2x_0x - 2y_0y + {x_0}^2 + {y_0}^2 - r^2 = 0
+\end{equation*}
+\begin{align*}
+    a & = 1    & b & = 0                      \\
+    c & = 1    & d & =-2x_0                   \\
+    e & =-2y_0 & f & ={x_0}^2 + {y_0}^2 - r^2
+\end{align*}
+
+\subsection{Outline the Direct Linear Transform (DLT) algorithm for computing least square estimate of $a, b, c, d, e, f$ for a given geometric 2-dimensional point data.}
+% According to DLT, a matrix equation $\mathbf{X} =\mathbf {A} \mathbf {Y}$ can be solved for $\mathbf{A}$ using $\mathbf{A} =\mathbf{X} \mathbf{Y}^T (\mathbf{Y}\mathbf{Y}^T)^{-1}$
+We will assume $\mathbf{X}$ to be the $x$ coordinates of the data, and $\mathbf{Y}$ to be the $y$ coordinates of the data. Thus in our case, we have:
+$A = \begin{bmatrix}
+        \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+        X^2    & XY     & Y^2    & X      & Y      & 1      \\
+        \vdots & \vdots & \vdots & \vdots & \vdots & \vdots
+    \end{bmatrix}_{n\times 6}$,
+$X = \begin{bmatrix}
+        a \\b\\c\\d\\e\\f
+    \end{bmatrix}_{6\times 1}$ and
+$b = \begin{bmatrix}
+        0 \\0\\0\\\vdots\\0
+    \end{bmatrix}_{n\times 1}$.
+\par For least squares solution, we find $\mathbf{X}$ that minimizes $\left\lVert \mathbf{A}\mathbf{X} - \mathbf{b}\right\rVert$.
+\begin{align*}
+                   & \mathbf{U} \mathbf{D}\mathbf{V}^T = SVD(\mathbf{A})                                     \\
+                   & \left\lVert \mathbf{A}\mathbf{X}-\mathbf{b}\right\rVert = 0                             \\
+    \implies       & \left\lVert \mathbf{U} \mathbf{D}\mathbf{V}^T\mathbf{X}-b \right\rVert=0                \\
+    \implies       & \left\lVert \mathbf{D}\mathbf{V}^T \mathbf{X} - \mathbf{U}^T \mathbf{b}\right\rVert = 0 \\
+    \text{Since, } & \mathbf{U}^T \mathbf{b} = 0                                                             \\
+    \text{and }    & \mathbf{Y} = \mathbf{V}^T \mathbf{X}
+\end{align*}
+Thus the last column of $\mathbf{V}^T$ will contains values of $\mathbf{X}$ for minimum values of $\left\lVert \mathbf{A}\mathbf{X}-\mathbf{b}\right\rVert = 0$.
+
+\subsection{We are given geometric point data to compute the parameters of a circle which will best fit the data. Construct and state the constraint matrix for this circle fitting problem.}
+We have $ax^2 + bxy + cy^2 + dx + ey + f = 0$.
+Let $\mathbf{X} = \begin{bmatrix}
+        x \\y\\1
+    \end{bmatrix}_{3 \times 1}$, and $\mathbf{C}= \begin{bmatrix}
+        a & b/2 & d/2 \\ b/2&c&e/2\\ d/2&e/2&f
+    \end{bmatrix}_{3 \times 3}$.
+\par Therefore,
+\begin{align*}
+             & \mathbf{X}^T\mathbf{C}\mathbf{X}=0                                                                              \\
+    \implies & \begin{bmatrix}
+        x & y & 1
+    \end{bmatrix} \begin{bmatrix}
+        ax + by/2 + d/2 \\  bx/2 + cy + e/2 \\ dx/2  + ey/2 + f
+    \end{bmatrix} = 0                                                       \\
+    \implies & ax^2 + \frac{bxy}{2} + \frac{dx}{2} + \frac{bxy}{2} + cy^2 + \frac{ey}{x} + \frac{dx}{2} + \frac{ey}{2} + f = 0
+\end{align*}
+Using linear transform, $\mathbf{A}\mathbf{X}=0$. Thus,
+\begin{align*}
+                & (\mathbf{A}\mathbf{X})^T \mathbf{A}\mathbf{X} = 0 \\
+    \implies    & \mathbf{X}^T(\mathbf{A}^T\mathbf{A})\mathbf{X}=0  \\
+    \text{and } & \mathbf{X}^T\mathbf{C}\mathbf{X}=0                \\
+\end{align*}
+Here, $\mathbf{A}$ is  the design matrix, $\mathbf{A}^T\mathbf{A}$ is the scatter matrix, and $\mathbf{C}$ is the constraint matrix.
+\par For a circle, $b^2-4ac<0$.
+\par Thus, we need to find $\mathbf{X}$ such that
+\begin{align*}
+    \underset{\mathbf{X}}{\mathrm{argmin}} \begin{bmatrix}
+        \mathbf{X}^T(\mathbf{A}^T\mathbf{A})\mathbf{X} \mid \mathbf{X}^T\mathbf{C}\mathbf{X} = -\phi
+    \end{bmatrix}
+\end{align*}
+Using Lagrangian Multiplier,
+\begin{align*}
+             & \mathcal{L}(\mathbf{X})                                  = \mathbf{X}^T(\mathbf{A}^T\mathbf{A})\mathbf{X} - \lambda(\mathbf{X}^T\mathbf{C}\mathbf{X} + \phi) \\
+    \implies & \mathcal{L}^\prime(\mathbf{X})                  = 0                                                                                                          \\
+    \implies & \mathbf{X}^T(\mathbf{A}^T\mathbf{A})\mathbf{X}  = \lambda\mathbf{X}^T\mathbf{C}\mathbf{X} = \lambda\phi                                                      \\
+    \implies & (\mathbf{A}^T\mathbf{A})\mathbf{X} = \lambda\mathbf{C}\mathbf{X}                                                                                             \\
+    \implies & \frac{1}{\lambda}\mathbf{X} = (\mathbf{A}^T\mathbf{A})^{-1}\mathbf{C}\mathbf{X}
+\end{align*}
+Using EVD of $(\mathbf{A}^T\mathbf{A})^{-1}\mathbf{C}$, we find $\lambda^{-1}$, which is the required parameter.
+\end{document}
